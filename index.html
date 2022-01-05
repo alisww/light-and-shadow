@@ -1,0 +1,102 @@
+<html>
+
+<head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <style>
+        html {
+            font-family: sans-serif;
+        }
+
+        .input-box {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .display-box {
+            display: flex;
+            flex-direction: column;
+            width: 25%;
+        }
+
+        .display-box>p {
+            padding: 2rem;
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        #dark-mode {
+            background-color: #363940;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        import('./module.js').then((palette) => {
+            palette = palette.default;
+            
+            console.log("done");
+            document.getElementById('loading').remove();
+            document.querySelector('.display-box').style.visibility = "visible";
+            document.querySelector('.input-box').style.visibility = "visible";
+
+            // https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb lol i am so tired
+            function hexToRgb(hex) {
+                var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                return [
+                    parseInt(result[1], 16),
+                    parseInt(result[2], 16),
+                    parseInt(result[3], 16)
+                ]
+            }
+
+            function rgbToHex(r, g, b) {
+                return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+            }
+
+            document.querySelector(".input-box").addEventListener("submit", function (e) {
+                e.preventDefault();
+                let hex = document.getElementById("color").value;
+                let color = palette.nearest(hexToRgb(hex), "cie94");
+                color = rgbToHex(color[0], color[1], color[2]);
+                document.getElementById("light-mode").style.color = color;
+                document.getElementById("dark-mode").style.color = color;
+                document.getElementById("light-mode").innerText = `light mode: ${color}`;
+                document.getElementById("dark-mode").innerText = `dark mode: ${color}`;
+
+            });
+        });
+    </script>
+
+    <span id="loading"> loading... </span>
+
+    <div class="input-box" style="visibility: hidden;">
+        <form>
+            <div class="flex" style="margin-bottom: 1rem;">
+                <input type="color" id="color" name="color">
+            </div>
+
+            <div class="flex">
+                <button type="submit">find closest</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="display-box" style="visibility: hidden;">
+        <p id="light-mode">
+            light mode
+        </p>
+        <p id="dark-mode">
+            dark mode
+        </p>
+    </div>
+    <!-- <div style="display: block; width: 25%; height: 4rem; text-align: center; background-color:#ddd">
+        <span>
+            test
+        </span>
+    </div> -->
+</body>
+
+</html>
