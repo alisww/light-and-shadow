@@ -1,12 +1,14 @@
 use kiddo::KdTree;
 use lab::Lab;
 use serde::{Deserialize, Serialize};
-use wasm_bindgen::prelude::*;
 
 mod color_calc;
 
 pub use color_calc::*;
+
+#[cfg(target = "wasm32-unknown-unknown")]
 mod js;
+#[cfg(target = "wasm32-unknown-unknown")]
 pub use js::*;
 
 #[derive(Serialize, Deserialize)]
