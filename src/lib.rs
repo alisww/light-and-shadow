@@ -15,6 +15,7 @@ pub use js::*;
 pub enum ColorDistance {
     CIE76,
     CIE94,
+    CIEDE2000,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -65,6 +66,9 @@ impl Palette {
             let dist = &match distance_method {
                 ColorDistance::CIE76 => cie76_distance,
                 ColorDistance::CIE94 => cie94_distance,
+                ColorDistance::CIEDE2000 => {
+                    |lhs: &[f32; 3], rhs: &[f32; 3]| empfindung::cie00::diff(lhs, rhs)
+                }
             };
 
             (
@@ -88,6 +92,9 @@ impl Palette {
         let dist = &match distance_method {
             ColorDistance::CIE76 => cie76_distance,
             ColorDistance::CIE94 => cie94_distance,
+            ColorDistance::CIEDE2000 => {
+                |lhs: &[f32; 3], rhs: &[f32; 3]| empfindung::cie00::diff(lhs, rhs)
+            }
         };
 
         self.colors
