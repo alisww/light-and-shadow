@@ -49,3 +49,4 @@ pub fn cie94_distance(lhs: &[f32; 3], rhs: &[f32; 3]) -> f32 {
         + (delta_c / (K_L * s_c)).powi(2)
         + (delta_h / (K_L * s_h)).powi(2)
 }
+

@@ -1,24 +1,19 @@
 use kiddo::KdTree;
-use lab::Lab;
-use serde::{Deserialize, Serialize};
+use kasi_kule::*;
 
 mod color_calc;
 
 pub use color_calc::*;
+
+fn jab_distance(lhs: &[f32; 3], rhs: &[f32; 3]) -> f32 {
+    Jab::from(*lhs).squared_difference(&Jab::from(*rhs))
+}
 
 #[cfg(target = "wasm32-unknown-unknown")]
 mod js;
 #[cfg(target = "wasm32-unknown-unknown")]
 pub use js::*;
 
-#[derive(Serialize, Deserialize)]
-pub enum ColorDistance {
-    CIE76,
-    CIE94,
-    CIEDE2000,
-}
-
-#[derive(Serialize, Deserialize)]
 pub struct Palette {
     min_ratio: f32,
     backgrounds: Vec<[u8; 3]>,
@@ -40,8 +35,8 @@ impl Palette {
                         .iter()
                         .all(|&bg| contrast_luminance(luminance, bg) > min_ratio)
                     {
-                        let lab = Lab::from_rgb(&color);
-                        colors.add(&[lab.l, lab.a, lab.b], color).unwrap();
+                        let jab = Jab::from(color);
+                        colors.add(&[jab.J, jab.a, jab.b], color).unwrap();
                     }
                 }
             }
@@ -54,7 +49,7 @@ impl Palette {
         }
     }
 
-    pub fn find_closest(&self, color: [u8; 3], distance_method: ColorDistance) -> ([u8; 3], bool) {
+    pub fn find_closest(&self, color: [u8; 3]) -> ([u8; 3], bool) {
         if self
             .backgrounds
             .iter()
@@ -62,19 +57,11 @@ impl Palette {
         {
             (color, true)
         } else {
-            let lab = Lab::from_rgb(&color);
-            let dist = &match distance_method {
-                ColorDistance::CIE76 => cie76_distance,
-                ColorDistance::CIE94 => cie94_distance,
-                ColorDistance::CIEDE2000 => {
-                    |lhs: &[f32; 3], rhs: &[f32; 3]| empfindung::cie00::diff(lhs, rhs)
-                }
-            };
-
+            let jab = Jab::from(color);
             (
                 *self
                     .colors
-                    .nearest_one(&[lab.l, lab.a, lab.b], dist)
+                    .nearest_one(&[jab.J, jab.a, jab.b], &jab_distance)
                     .unwrap()
                     .1,
                 false,
@@ -85,20 +72,12 @@ impl Palette {
     pub fn find_closest_n(
         &self,
         color: [u8; 3],
-        distance_method: ColorDistance,
         n: usize,
     ) -> Vec<(f32, [u8; 3])> {
-        let lab = Lab::from_rgb(&color);
-        let dist = &match distance_method {
-            ColorDistance::CIE76 => cie76_distance,
-            ColorDistance::CIE94 => cie94_distance,
-            ColorDistance::CIEDE2000 => {
-                |lhs: &[f32; 3], rhs: &[f32; 3]| empfindung::cie00::diff(lhs, rhs)
-            }
-        };
-
+        let jab = Jab::from(color);
+        
         self.colors
-            .nearest(&[lab.l, lab.a, lab.b], n, dist)
+            .nearest(&[jab.J, jab.a, jab.b], n, &jab_distance)
             .unwrap()
             .into_iter()
             .map(|(a, b)| (a, *b))
